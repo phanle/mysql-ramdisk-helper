@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/bin/bash -x
 
 ##################################
 # CONFIGURE THIS                 #
 ##################################
-RAMDISK_SIZE=256
+RAMDISK_SIZE=1256
 RAMDISK_NAME="MyRamdisk"
 
-MYSQL_ROOTPW="secret"
+MYSQL_ROOTPW=""
 MYSQL_SOCKET=/tmp/myramdisk.sock
 MYSQL_CONFIG=/tmp/myramdisk.cnf
 
@@ -57,17 +57,19 @@ if [ $? != "0" ]; then
 fi
 
 mkdir $DATADIR
-
 # Prepare a my.cnf
 cat ${SCRIPTPATH}/my.cnf.tpl | sed "s|%DATADIR%|$DATADIR|g;s|%SOCKET%|$MYSQL_SOCKET|;s|%USER%|$USER|" > $MYSQL_CONFIG
 
 # Configure & startup mysql instance
-$BASEDIR/scripts/mysql_install_db --defaults-file=$MYSQL_CONFIG --basedir=$BASEDIR --datadir=$DATADIR
+cd $DATADIR
+ls
+pwd
+$BASEDIR/bin/mysqld --initialize-insecure --user=root --basedir=$BASEDIR --datadir=$DATADIR & 
 $BASEDIR/bin/mysqld_safe --defaults-file=$MYSQL_CONFIG --basedir=$BASEDIR &
 sleep 2
 echo "STARTED MYSQL"
-$BASEDIR/bin/mysqladmin --defaults-file=$MYSQL_CONFIG -u root password "$MYSQL_ROOTPW"
 
+#$BASEDIR/bin/mysqladmin --defaults-file=$MYSQL_CONFIG -u root #password "$MYSQL_ROOTPW"
 trap control_c SIGINT
 wait
 
